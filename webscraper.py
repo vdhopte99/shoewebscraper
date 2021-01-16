@@ -76,15 +76,30 @@ url = "https://stockx.com/search/sneakers?s="
 for i in range(len(query)):
     url += query[i]
     if i != len(query) - 1:
-        url += "20"
+        url += "%20"
 
+# driver.get(url)
+# time.sleep(3)
+# image = driver.find_element_by_class_name("price-line-div")
+# # image = image.find_element_by_tag_name("img")
+# # image = image.get_attribute("src")
+# driver.close()
+
+# print(image.text)
+
+
+# # url = "https://stockx.com/search/sneakers?s=air%20force%201"
 
 response = requests.get(url)
 stockx_soup = soup(response.content, "html.parser")
 
-images = stockx_soup.find_all("img")
+# listings = stockx_soup.findAll("div", {"class": "price-line-div"})
+print(stockx_soup.prettify())
 
-print(len(images))
+
+print(len(listings))
+
+
 
 
 
