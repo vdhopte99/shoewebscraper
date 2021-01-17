@@ -87,6 +87,7 @@ for shoe in shoes:
 
     januaryShoes.append((name, price, image))
 
+januaryList = []
 for shoe in januaryShoes:
     query = shoe[0]
     query = query.split(" ")
