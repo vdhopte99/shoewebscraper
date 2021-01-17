@@ -87,8 +87,6 @@ for shoe in shoes:
 
     januaryShoes.append((name, price, image))
 
-januaryList = []
-
 for shoe in januaryShoes:
     query = shoe[0]
     query = query.split(" ")
@@ -122,5 +120,5 @@ for shoe in januaryShoes:
     resale = int(resale[1:])
     januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale})
 
-
-    print(januaryList)
+for shoe in januaryList:
+    print(shoe)
