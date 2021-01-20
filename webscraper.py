@@ -118,7 +118,7 @@ for shoe in januaryShoes:
     resale = stockx_soup.find("div", {"class": "stats"})
     resale = resale.text
     resale = resale.split("L")
-    resale = int(resale[1:])
+    resale = resale[1:]
     januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale})
 
 for shoe in januaryList:
