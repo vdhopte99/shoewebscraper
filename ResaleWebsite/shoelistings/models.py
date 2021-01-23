@@ -1,3 +1,8 @@
 from django.db import models
 
-# Create your models here.
+class shoeListing(models.Model):
+    name = models.CharField()
+    retail = models.IntegerField()
+    resale = models.IntegerField()
+    profit = models.IntegerField()
+    date = models.IntegerField()

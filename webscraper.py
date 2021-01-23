@@ -3,6 +3,7 @@ import urllib.request
 import sys
 from bs4 import BeautifulSoup as soup
 import random
+import time
 
 userAgents = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15", 
 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
@@ -55,37 +56,42 @@ userAgents = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/605.1
 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15",	
 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Safari/605.1.15"]
 
-headers={"User-Agent": 
-"Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36"}
+headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36"}
 
 soleCollector = "https://solecollector.com/sneaker-release-dates/all-release-dates/"
 
-agentIndex = random.randint(0, len(userAgents))
-headers = {"User-Agent": userAgents[agentIndex]}
+# agentIndex = random.randint(0, len(userAgents))
+# headers = {"User-Agent": userAgents[agentIndex]}
 response = requests.get(soleCollector, headers=headers)
 sole_soup = soup(response.content, "html.parser")
-shoes = sole_soup.findAll("div", {"class": "row"})
+releaseDates = sole_soup.findAll("div", {"class": "release-group__container"})
 januaryShoes = []
 
-for shoe in shoes:
-    image = shoe.find("img")
-    image = image["src"]
-    shoe = shoe.text
-    shoe = shoe.split("$")
+for date in releaseDates:
+    day = date.text.replace("\n", " ")
+    day = day.split(" ")
+    day = day[3]
+
+    shoes = date.findAll("div", {"class": "row"})
+    for shoe in shoes:
+        image = shoe.find("img")
+        image = image["src"]
+        shoe = shoe.text
+        shoe = shoe.split("$")
     
-    name = shoe[0]
-    name = name.replace("\n", "")
-    name = name.strip()
+        name = shoe[0]
+        name = name.replace("\n", "")
+        name = name.strip()
 
-    if (len(shoe) < 2):
-        price = None
-    else:
-        price = shoe[1]
-        price = price.replace("\n", "")
-        price = price.strip()
-        price = int(price)
-
-    januaryShoes.append((name, price, image))
+        if (len(shoe) < 2):
+            price = None
+        else:
+            price = shoe[1]
+            price = price.replace("\n", "")
+            price = price.strip()
+            price = int(price)
+        
+        januaryShoes.append((name, price, image, day))
 
 januaryList = []
 for shoe in januaryShoes:
@@ -96,9 +102,7 @@ for shoe in januaryShoes:
     for i in range(len(query)):
         url += query[i] + "+"
     url += "stockx&oq=Adidas+Harden+Vol.+5+Crystal+White%2FCloud+White%2FRoyal+Blue+stockx&gs_lcp=CgZwc3ktYWIQAzoECCMQJzoHCCMQrgIQJzoFCCEQoAE6BAghEApQ7RhYiR9gwx9oAHAAeACAAXqIAd8FkgEDNi4ymAEAoAEBqgEHZ3dzLXdpesABAQ&sclient=psy-ab&ved=0ahUKEwj9oa2FjaHuAhWYElkFHWMiCJsQ4dUDCA0&uact=5"
-    
-    agentIndex = random.randint(0, len(userAgents))
-    headers = {"User-Agent": userAgents[agentIndex]}
+
     response = requests.get(url, headers=headers)
     google_soup = soup(response.content, "html.parser")
 
@@ -107,19 +111,39 @@ for shoe in januaryShoes:
     link = link["href"]
 
     if link.find("stockx") == -1:
-        januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": None})
+        print("NO STOCKX")
+        januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": 0, "profit": 0, "date": shoe[3]})
         continue
     
-    agentIndex = random.randint(0, len(userAgents))
-    headers = {"User-Agent": userAgents[agentIndex]}
     response = requests.get(link, headers=headers)
+    # time.sleep(3)
     stockx_soup = soup(response.content, "html.parser")
-
+    # time.sleep(3)
     resale = stockx_soup.find("div", {"class": "stats"})
+
+    if resale is None:
+        print("SCRAPE FAIL")
+        januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": None, "profit": None, "date": shoe[3]})
+        continue
+
+    # while resale is None:
+    #     agentIndex = random.randint(0, len(userAgents)-1)
+    #     randomheaders = {"User-Agent": userAgents[agentIndex]}
+    #     response = requests.get(link, headers=randomheaders)
+    #     time.sleep(3)
+    #     stockx_soup = soup(response.content, "html.parser")
+    #     resale = stockx_soup.find("div", {"class": "stats"})
+    #     print("Trying again")
     resale = resale.text
     resale = resale.split("L")
-    resale = resale[1:]
-    januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale})
+    resale = resale[0]
+    resale = int(resale[1:])
+    if shoe[1] is not None:
+        januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale, "profit": (resale - shoe[1]), "date": shoe[3]})
+    else:
+        januaryList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale, "profit": 0, "date": shoe[3]})
+
+    print("SUCCESS")
 
 for shoe in januaryList:
     print(shoe)
