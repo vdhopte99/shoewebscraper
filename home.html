@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kicks Watch</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" 
+        rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" 
+        crossorigin="anonymous">
+    </head>
+
+    <body style="background-color: black;">
+
+        <nav class="navbar">
+              <h1 style="text-align: center; color: rgb(255, 123, 123); margin-left: 10px;">Kicks Watch</h1>
+        </nav>
+
+        <div class="container">
+            <h6 style="text-align: center; color: white;;">Welcome to Kicks Watch! The website that lists upcoming shoe releases along with their retail and resale price so that you can know which upcoming shoes you can make money from!</h6>
+        </div>
+
+        <div class="container">
+            <div class="form-row">
+                <div class="col-md-4 mb-3">
+                    <label for="month" class="form-label" style="color: rgb(255, 123, 123);">Month: </label>
+                    <select id="month" class="form-control" onchange="getDrops(value)">
+                        <option value="January" selected="selected">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="Decemeber">December</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3" style="text-align: right;">
+                    <button class="btn btn-primary">Update</button>
+                </div>
+
+            </div>
+            
+            <table class="table table-hover table-dark" style="text-align: center; overflow: scroll;" id="shoelist">
+                <!-- <caption>Last updated on:</caption>
+                <th>Name:</th>
+                <th>Retail Price:</th>
+                <th>Resale Price:</th>
+                <th>Potential Profit:</th>
+                <th></th>
+            
+                {% for shoe in shoes %}
+                <tr>
+                    <td>{{ shoe['name'] }}</td>
+                    {% if shoe['retail'] == 0 %}
+                    <td style="color: rgb(255, 255, 125);">Unavailable</td>
+                    {% else %}
+                    <td>${{ shoe['retail'] }}</td>
+                    {% endif %}
+                    {% if shoe['resale'] == 0 %}
+                    <td style="color: rgb(255, 255, 125);">Unavailable</td>
+                    <td style="color: rgb(255, 255, 125);">Unavailable</td>
+                    {% else %}
+                    <td>${{ shoe['resale'] }}</td>
+                    {% if shoe['profit'] == None %}
+                    <td style="color: rgb(255, 255, 125);">Unavailable</td>
+                    {% elif shoe['profit'] > 0 %}
+                    <td style="color: rgb(96, 235, 96);">${{ shoe['profit'] }}</td>
+                    {% else %}
+                    <td style="color: rgb(255, 123, 123);">${{ shoe['profit'] }}</td>
+                    {% endif %}
+                    {% endif %}
+                    <td><img src="{{ shoe.image }}"></td>
+                </tr>
+                {% endfor %} -->
+            </table>
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"
+         integrity="sha384-q2kxQ16AaE6UbzuKqyBE9/u/KzioAlnx2maXQHiDX9d4/zp8Ok3f+M7DPm+Ib6IU" 
+         crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.min.js" 
+        integrity="sha384-pQQkAEnwaBkjpqZ8RU1fF1AKtTcHJwFl3pblpTlHXybJjHpMYo79HY3hIi4NKxyj" 
+        crossorigin="anonymous"></script>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+        <script>
+
+            'use strict';
+
+            let request = null;
+
+            function getDrops(month){
+                month = encodeURIComponent(month);
+
+                let url = '/getDrops?month=' + month
+
+                if (request != null){
+                    request.abort();
+                }
+
+                request = $.ajax(
+                    {
+                        type: 'GET',
+                        url: url,
+                        success: handleResponse
+                    }
+                );
+            }
+
+            function handleResponse(response){
+                $('#shoelist').html(response);
+            }
+
+            function setup(){
+                getDrops($('#month').val());
+            }
+
+            $('document').ready(setup);
+        </script>        
+    </body>
+</html>
+
