@@ -126,9 +126,9 @@ def returnDrops(month):
             url += query[i] + "+"
         url += "stockx&oq=Adidas+Harden+Vol.+5+Crystal+White%2FCloud+White%2FRoyal+Blue+stockx&gs_lcp=CgZwc3ktYWIQAzoECCMQJzoHCCMQrgIQJzoFCCEQoAE6BAghEApQ7RhYiR9gwx9oAHAAeACAAXqIAd8FkgEDNi4ymAEAoAEBqgEHZ3dzLXdpesABAQ&sclient=psy-ab&ved=0ahUKEwj9oa2FjaHuAhWYElkFHWMiCJsQ4dUDCA0&uact=5"
 
-        agentIndex = random.randint(0, len(userAgents) - 1)
-        randHeader = {"User-Agent": userAgents[agentIndex]}
-        response = requests.get(url, headers=randHeader)
+        # agentIndex = random.randint(0, len(userAgents) - 1)
+        #randHeader = {"User-Agent": userAgents[agentIndex]}
+        response = requests.get(url, headers=headers)
         google_soup = soup(response.content, "html.parser")
 
         link = google_soup.find('div', {"class": "g"})
@@ -144,19 +144,32 @@ def returnDrops(month):
         # time.sleep(3)
         stockx_soup = soup(response.content, "html.parser")
         # time.sleep(3)
-        resale = stockx_soup.find("div", {"class": "stats"})
-
+        resale = stockx_soup.find_all("div", {"class": "inner"})
+        
         if resale is None:
             dropList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": 0, "profit": 0, "date": shoe[3]})
             continue
 
+        resale = resale[1]
         resale = resale.text
-        resale = resale.split("L")
+        resale = resale.split("H")
         resale = resale[0]
-        resale = int(resale[1:])
+        resale = resale[1:]
+        temp = ""
+        for char in resale:
+            try:
+                digit = int(char)
+                temp += char
+            except:
+                continue
+        resale = int(temp)
+        
         if shoe[1] != 0:
             dropList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale, "profit": (resale - shoe[1]), "date": shoe[3]})
         else:
             dropList.append({"name": shoe[0], "retail": shoe[1], "image": shoe[2], "resale": resale, "profit": 0, "date": shoe[3]})
 
     return dropList
+
+
+# returnDrops("January")
