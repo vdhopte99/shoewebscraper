@@ -32,14 +32,19 @@ def getDrops():
     results = shoeListing.query.filter_by(month=month).all()
 
     if len(results) == 0:
-        shoes = returnDrops(month)
+        try:
+            shoes = returnDrops(month)
 
-        for shoe in shoes:
-            listing = shoeListing(name=shoe['name'], retail=shoe['retail'], resale=shoe['resale'], profit=shoe['profit'], month=month, date=shoe['date'], image=shoe['image'])
-            db.session.add(listing)
-        db.session.commit()
+            for shoe in shoes:
+                listing = shoeListing(name=shoe['name'], retail=shoe['retail'], resale=shoe['resale'], profit=shoe['profit'], month=month, date=shoe['date'], image=shoe['image'])
+                db.session.add(listing)
+            db.session.commit()
 
-        results = shoeListing.query.filter_by(month=month).all()
+            results = shoeListing.query.filter_by(month=month).all()
+        except:
+            return("<h3 style='color: rgb(255, 123, 123);'>Sorry :/ upcoming sneakers for this month cannot be displayed right now, please try again later<h3>")
+
+
 
     html = "<table class='table table-hover table-dark' style='text-align: center; overflow: scroll;' id='shoelist'>" + \
                 "<caption>Last updated on:</caption>" + \
@@ -166,13 +171,17 @@ def updateDrops():
         
     results = shoeListing.query.filter_by(month=month).all()
 
-    html = "<table class='table table-hover table-dark' style='text-align: center; overflow: scroll;' id='shoelist'>" + \
+    html = "<div class='alert alert-success alert-dismissible fade show' role='alert'>Successfully updated "+ str(counter) + " sneakers." + \
+               "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span>" + \
+               "</button></div>"
+
+    html += "<table class='table table-hover table-dark' style='text-align: center; overflow: scroll;' id='shoelist'>" + \
                 "<caption>Last updated on:</caption>" + \
                 "<th style'color: rgb(255, 123, 123);'>Name:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Retail Price:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Resale Price:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Potential Profit:</th>" + \
-                "<th>" + str(counter) + " shoes updated</th>"
+                "<th></th>"
 
     for result in results:
         html += "<tr><td>" + result.name + "</td>"
