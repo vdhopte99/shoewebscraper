@@ -18,7 +18,7 @@ class shoeListing(db.Model):
     date = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
-        return f"shoeListing('{self.name}', '{self.retail}', '{self.resale}')"
+        return f"shoeListing('{self.name}', '{self.retail}', '{self.resale}', '{self.date}')"
 
 @app.route('/')
 def home():
@@ -29,12 +29,26 @@ def home():
 @app.route('/getDrops', methods=['GET'])
 def getDrops():
     month = request.args.get('month')
-    results = shoeListing.query.filter_by(month=month).all()
+    sort = request.args.get('sort')
 
+    if sort == 'date':
+        results = shoeListing.query.filter_by(month=month).all()
+    elif sort == 'retaillotohi':
+        results = shoeListing.query.filter_by(month=month).order_by(shoeListing.retail).all()
+    elif sort == 'retailhitolo':
+        results = shoeListing.query.filter_by(month=month).order_by(shoeListing.retail.desc()).all()
+    elif sort == 'resalelotohi':
+        results = shoeListing.query.filter_by(month=month).order_by(shoeListing.resale).all()
+    elif sort == 'resalehitolo':
+        results = shoeListing.query.filter_by(month=month).order_by(shoeListing.resale.desc()).all()
+    elif sort == 'profitlotohi':
+        results = shoeListing.query.filter_by(month=month).order_by(shoeListing.profit).all()
+    elif sort == 'profithitolo':
+        results = shoeListing.query.filter_by(month=month).order_by(shoeListing.profit.desc()).all()
+     
     if len(results) == 0:
         try:
             shoes = returnDrops(month)
-
             for shoe in shoes:
                 listing = shoeListing(name=shoe['name'], retail=shoe['retail'], resale=shoe['resale'], profit=shoe['profit'], month=month, date=shoe['date'], image=shoe['image'])
                 db.session.add(listing)
@@ -44,14 +58,12 @@ def getDrops():
         except:
             return("<h3 style='color: rgb(255, 123, 123);'>Sorry :/ upcoming sneakers for this month cannot be displayed right now, please try again later<h3>")
 
-
-
     html = "<table class='table table-hover table-dark' style='text-align: center; overflow: scroll;' id='shoelist'>" + \
-                "<caption>Last updated on:</caption>" + \
                 "<th style'color: rgb(255, 123, 123);'>Name:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Retail Price:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Resale Price:</th>" + \
-                "<th style='color: rgb(255, 123, 123);'>Potential Profit:</th>" + \
+                "<th style='color: rgb(255, 123, 123);'>Estimated Profit:</th>" + \
+                "<th style='color: rgb(255, 123, 123);'>Release Date:</th>" + \
                 "<th></th>"
 
     for result in results:
@@ -73,6 +85,8 @@ def getDrops():
             html += "<td style='color: rgb(96, 235, 96);'><strong><u>$" + str(result.profit) + "</u></strong></td>"
         else:
             html += "<td style='color: rgb(255, 123, 123);'><strong><u>$" + str(result.profit) + "</u></strong></td>"
+
+        html += "<td>" + month + " " + str(result.date) + "<td>"
 
         if result.image != "https://images.solecollector.com/complex/image/upload/v1557176412/SC_Logo_Globe_TM_Blue_20190506-01-01-01_urcggx.svg":
             html += "<td><img src='" + result.image + "'></td>" + \
@@ -107,6 +121,7 @@ def updateDrops():
                 "<th style='color: rgb(255, 123, 123);'>Retail Price:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Resale Price:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Potential Profit:</th>" + \
+                "<th style='color: rgb(255, 123, 123);'>Release Date:</th>" + \
                 "<th></th>"
 
         for result in results:
@@ -129,6 +144,8 @@ def updateDrops():
             else:
                 html += "<td style='color: rgb(255, 123, 123);'><strong><u>$" + str(result.profit) + "</u></strong></td>"
 
+            html += "<td>" + month + " " + str(result.date) + "<td>"
+
             if result.image != "https://images.solecollector.com/complex/image/upload/v1557176412/SC_Logo_Globe_TM_Blue_20190506-01-01-01_urcggx.svg":
                 html += "<td><img src='" + result.image + "'></td>" + \
                         "</tr>"
@@ -145,7 +162,6 @@ def updateDrops():
     for shoe in updatedShoes:
         try:
             result = shoeListing.query.filter_by(name=shoe['name']).one()
-
             updated = False
             if result.retail != shoe['retail']:
                 result.retail = shoe['retail']
@@ -154,10 +170,12 @@ def updateDrops():
                 result.resale = shoe['resale']
                 updated = True
             result.profit = result.resale - result.retail
+            if result.retail == 0 or result.resale == 0:
+                result.profit = 0
             if result.month != month:
                 result.month = month
                 updated = True
-            if result.date != shoe['date']:
+            if int(result.date) != int(shoe['date']):
                 result.date = shoe['date']
                 updated = True
             db.session.commit()
@@ -171,16 +189,21 @@ def updateDrops():
         
     results = shoeListing.query.filter_by(month=month).all()
 
-    html = "<div class='alert alert-success alert-dismissible fade show' role='alert'>Successfully updated "+ str(counter) + " sneakers." + \
-               "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span>" + \
-               "</button></div>"
+    if counter != 0:
+        html = "<div class='alert alert-success alert-dismissible fade show' role='alert'>Successfully updated "+ str(counter) + " sneakers." + \
+                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span>" + \
+                "</button></div>"
+    else:
+        html = "<div class='alert alert-success alert-dismissible fade show' role='alert'>All sneakers already up to date!" + \
+                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span>" + \
+                "</button></div>"
 
     html += "<table class='table table-hover table-dark' style='text-align: center; overflow: scroll;' id='shoelist'>" + \
-                "<caption>Last updated on:</caption>" + \
                 "<th style'color: rgb(255, 123, 123);'>Name:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Retail Price:</th>" + \
                 "<th style='color: rgb(255, 123, 123);'>Resale Price:</th>" + \
-                "<th style='color: rgb(255, 123, 123);'>Potential Profit:</th>" + \
+                "<th style='color: rgb(255, 123, 123);'>Estimated Profit:</th>" + \
+                "<th style='color: rgb(255, 123, 123);'>Release Date:</th>" + \
                 "<th></th>"
 
     for result in results:
@@ -202,6 +225,8 @@ def updateDrops():
             html += "<td style='color: rgb(96, 235, 96);'><strong><u>$" + str(result.profit) + "</u></strong></td>"
         else:
             html += "<td style='color: rgb(255, 123, 123);'><strong><u>$" + str(result.profit) + "</u></strong></td>"
+
+        html += "<td>" + month + " " + str(result.date) + "<td>"
 
         if result.image != "https://images.solecollector.com/complex/image/upload/v1557176412/SC_Logo_Globe_TM_Blue_20190506-01-01-01_urcggx.svg":
             html += "<td><img src='" + result.image + "'></td>" + \
